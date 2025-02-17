@@ -8,7 +8,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Stateful Widget',
+      title: 'Stateful Widget App',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
@@ -23,46 +23,51 @@ class CounterWidget extends StatefulWidget {
 }
 
 class _CounterWidgetState extends State<CounterWidget> {
-  int _counter = 0;
-  int _incrementValue = 1;
-  List<int> _history = [];
+  int counter = 0; // Track the current counter
+  int incrementStep = 1; // How much we increase or decrease
+  List<int> history = []; // Keep track of all changes
 
-  void _incrementCounter() {
+  // Increase the counter based on the incrementStep
+  void increaseCounter() {
     setState(() {
-      if (_counter + _incrementValue <= 100) {
-        _history.add(_counter);
-        _counter += _incrementValue;
+      if (counter + incrementStep <= 100) { // Don't go over 100
+        history.add(counter); // Save current value
+        counter += incrementStep;
       } else {
+        // Pop up if max is reached
         showDialog(
           context: context,
-          builder: (context) => AlertDialog(
-            content: Text("Maximum limit reached!"),
+          builder: (ctx) => AlertDialog(
+            content: Text("You've hit the limit!"),
           ),
         );
       }
     });
   }
 
-  void _decrementCounter() {
+  // Decrease the counter but no less than 0
+  void decreaseCounter() {
     setState(() {
-      if (_counter > 0) {
-        _history.add(_counter);
-        _counter = _counter > 0 ? _counter - _incrementValue : 0;
+      if (counter > 0) {
+        history.add(counter);
+        counter = counter - incrementStep > 0 ? counter - incrementStep : 0;
       }
     });
   }
 
-  void _resetCounter() {
+  // Reset everything back to zero
+  void resetCounter() {
     setState(() {
-      _history.add(_counter);
-      _counter = 0;
+      history.add(counter); // save before resetting
+      counter = 0;
     });
   }
 
-  void _undoCounter() {
-    if (_history.isNotEmpty) {
+  // Go back to the last number if possible
+  void undoAction() {
+    if (history.isNotEmpty) {
       setState(() {
-        _counter = _history.removeLast();
+        counter = history.removeLast(); // go back to the last one
       });
     }
   }
@@ -71,16 +76,17 @@ class _CounterWidgetState extends State<CounterWidget> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Stateful Widget'),
+        title: const Text('Fun With Counters'),
       ),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Center(
             child: Container(
-              color: _counter == 0 ? Colors.red : (_counter > 50 ? Colors.green : Colors.blue),
+              // Change color based on the counter value
+              color: counter == 0 ? Colors.red : (counter > 50 ? Colors.green : Colors.blue),
               child: Text(
-                '$_counter',
+                '$counter',
                 style: TextStyle(fontSize: 50, color: Colors.white),
               ),
             ),
@@ -88,41 +94,43 @@ class _CounterWidgetState extends State<CounterWidget> {
           Slider(
             min: 0,
             max: 100,
-            value: _counter.toDouble(),
+            value: counter.toDouble(),
             onChanged: (double value) {
               setState(() {
-                _counter = value.toInt();
+                counter = value.toInt(); // Set counter to slider value
               });
             },
             activeColor: Colors.blue,
-            inactiveColor: Colors.red,
+            inactiveColor: Colors.grey,
           ),
+          // Custom increment input
           TextField(
             decoration: InputDecoration(
-              labelText: 'Custom Increment Value',
+              labelText: 'Set Step Size',
             ),
             keyboardType: TextInputType.number,
             onChanged: (value) {
-              int? intValue = int.tryParse(value);
-              if (intValue != null) {
-                _incrementValue = intValue;
+              int? newStep = int.tryParse(value); // Make sure it's a number
+              if (newStep != null) {
+                incrementStep = newStep; // Set new step size
               }
             },
           ),
           ButtonBar(
             alignment: MainAxisAlignment.center,
             children: <Widget>[
-              ElevatedButton(onPressed: _incrementCounter, child: Text('Increment')),
-              ElevatedButton(onPressed: _decrementCounter, child: Text('Decrement')),
-              ElevatedButton(onPressed: _resetCounter, child: Text('Reset')),
-              ElevatedButton(onPressed: _undoCounter, child: Text('Undo')),
+              ElevatedButton(onPressed: increaseCounter, child: Text('Increase')),
+              ElevatedButton(onPressed: decreaseCounter, child: Text('Decrease')),
+              ElevatedButton(onPressed: resetCounter, child: Text('Reset')),
+              ElevatedButton(onPressed: undoAction, child: Text('Undo')),
             ],
           ),
           Expanded(
+            // Display history of values
             child: ListView.builder(
-              itemCount: _history.length,
+              itemCount: history.length,
               itemBuilder: (context, index) => ListTile(
-                title: Text('Previous value: ${_history[index]}'),
+                title: Text('Was: ${history[index]}'),
               ),
             ),
           ),
